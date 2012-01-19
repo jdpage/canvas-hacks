@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hilbert Curve</title>
+		<meta charset="utf-8" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+		<script>
+
+			
+			$(function(){
+				draw();
+			});
+
+			function draw() {
+				var canvas = $("#display")[0];
+				var ctx = canvas.getContext('2d');
+				drawLevel(ctx, 9, 0, 0, 0);
+			}
+
+			function drawLevel(ctx, level, rotation, x, y) {
+				if (level == 1) {
+					ctx.fillRect(x, y, 1, 1);
+					return 1;
+				}
+				var rots = [[0, 0],
+							[90, 270]];
+				var rots = rotate(rots, rotation / 90);
+				var size = drawLevel(ctx, level - 1, (rotation + rots[0][0]) % 360, x, y);
+				drawLevel(ctx, level - 1, (rotation + rots[0][1]) % 360, x + size + 1, y);
+				drawLevel(ctx, level - 1, (rotation + rots[1][0]) % 360, x, y + size + 1);
+				drawLevel(ctx, level - 1, (rotation + rots[1][1]) % 360, x + size + 1, y + size + 1);
+				drawConnectors(ctx, size, rotation, x, y);
+				return 2 * size + 1;
+			}
+
+			function drawConnectors(ctx, size, rotation, x, y) {
+				var ax = 0;
+				var ay = 0;
+				var bx = 0;
+				var by = 0;
+				var cx = 0;
+				var cy = 0;
+				if (rotation == 0) {
+					ax = x + size;
+					ay = y + size - 1;
+					bx = x;
+					by = y + size;
+					cx = x + 2 * size;
+					cy = by;
+				} else if (rotation == 90) {
+					ax = x + size + 1;
+					ay = y + size;
+					bx = x + size;
+					by = y;
+					cx = bx;
+					cy = y + 2 * size;
+				} else if (rotation == 180) {
+					ax = x + size;
+					ay = y + size + 1;
+					bx = x + 2 * size;
+					by = y + size;
+					cx = x;
+					cy = by;
+				} else if (rotation == 270) {
+					ax = x + size - 1;
+					ay = y + size;
+					bx = x + size;
+					by = y + 2 * size;
+					cx = bx;
+					cy = y;
+				}
+				ctx.fillRect(ax, ay, 1, 1);
+				ctx.fillRect(bx, by, 1, 1);
+				ctx.fillRect(cx, cy, 1, 1);
+			}
+
+			var r = [];
+			r[0] = [[1, 0], [0, 1]];
+			r[90] = [[0, -1], [1, 0]];
+			r[180] = [[-1, 0], [0, -1]];
+			r[270] = [[0, 1], [-1, 0]];
+
+			function mmul(a, b) {
+				if (b.length !== a[0].length) {
+					return null;
+				}
+				var w = b[0].length;
+				var h = a.length;
+				var n = b.length;
+				var o = [];
+				for (var y = 0; y < h; y++) {
+					o[y] = [];
+					for (var x = 0; x < w; x++) {
+						o[y][x] = 0;
+						for (var k = 0; k < n; k++) {
+							o[y][x] += a[y][k] * b[k][x];
+						}
+					}
+				}
+				return o;
+			}
+
+			function rotate(mat, incs) {
+				if (incs == 0) {
+					return mat;
+				}
+				var out = [[],[]];
+				out[0][0] = mat[1][0];
+				out[0][1] = mat[0][0];
+				out[1][1] = mat[0][1];
+				out[1][0] = mat[1][1];
+				if (incs == 1) {
+					return out;
+				}
+				return rotate(out, incs - 1);
+		}
+		</script>
+		<style>
+			body {
+				font: 12px/1.5 'Georgia', serif;
+			}
+		</style>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24174896-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+	</head>
+	<body>
+		<canvas id='display' width="511" height="511" style="margin-top: 5px;">
+			Your browser doesn't support canvas. To use this experiment, please upgrade.
+		</canvas>
+		<p style="font-size: 10px">Powered by HTML5 | <a href="http://sleepingcyb.org/">sleepingcyb.org</a></p>
+	</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hilbert Curve</title>
+		<meta charset="utf-8" />
+		<script>
+
+			window.requestAnimFrame = (function(){
+				return window.requestAnimationFrame ||
+					window.webkitRequestAnimationFrame ||
+					window.mozRequestAnimationFrame ||
+					window.oRequestAnimationFrame ||
+					window.msRequestAnimationFrame ||
+					function(callback, element) {
+						window.setTimeout(callback, 1000 / 60);
+					};
+			})();
+
+			var f = 0;
+			var l = 1;
+			var r = 3;
+
+			var up = 0;
+			var left = 1;
+			var down = 2;
+			var right = 3;
+
+			var speed = 5;
+
+			function draw() {
+				var canvas = document.getElementById("display");
+				var ctx = canvas.getContext('2d');
+				canvas.width = canvas.width;
+
+				var path = a(7);
+				trace(ctx, path, 254, 0, left, 0, "black");
+			}
+
+			function trace(ctx, path, x, y, d, n, fill) {
+				var i = path[n];
+				d = (d + i) % 4;
+				if (i == f) {
+					ctx.fillStyle = fill;
+					ctx.fillRect(x, y, 1, 1);
+					switch (d) {
+						case up:
+						ctx.fillRect(x, y - 1, 1, 1);
+						y -= 2;
+						break;
+						case left:
+						ctx.fillRect(x - 1, y, 1, 1);
+						x -= 2;
+						break;
+						case down:
+						ctx.fillRect(x, y + 1, 1, 1);
+						y += 2;
+						break;
+						case right:
+						ctx.fillRect(x + 1, y, 1, 1);
+						x += 2;
+						break;
+					}
+				}
+				n += 1;
+				if (n >= path.length) {
+					n = 0;
+					x = 254;
+					y = 0;
+					fill = fill == "white" ? "black" : "white";
+				}
+					
+				if (n % speed == 0) {
+					requestAnimFrame(function(){ trace(ctx, path, x, y, d, n, fill); });
+				} else {
+					trace(ctx, path, x, y, d, n, fill);
+				}
+			}
+
+			function a(level) {
+				if (level <= 0) {
+					return [];
+				}
+				var A = a(level - 1);
+				var B = b(level - 1);
+				return [l].concat(B, [f, r], A, [f], A, [r, f], B, [l]);
+			}
+
+			function b(level) {
+				if (level <= 0) {
+					return [];
+				}
+				var A = a(level - 1);
+				var B = b(level - 1);
+				return [r].concat(A, [f, l], B, [f], B, [l, f], A, [r]);
+			}
+
+			function updateSpeed() {
+				document.getElementById("speed").innerHTML = speed.toString();
+			}
+
+			function plus() {
+				speed += 1;
+				updateSpeed();
+			}
+
+			function minus() {
+				speed -= 1;
+				if (speed < 1) {
+					speed = 1;
+				}
+				updateSpeed();
+			}
+
+		</script>
+		<style>
+			body {
+				font: 12px/1.5 'Georgia', serif;
+			}
+			button {
+				border: 1px solid #808080;
+				border-top-color: #e0e0e0;
+				border-left-color: #e0e0e0;
+				background-color: #c0c0c0;
+				color: black;
+				padding: 2px;
+			}
+			button:hover {
+				background-color: #d0d0d0;
+			}
+			span {
+				padding: 2px;
+			}
+		</style>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24174896-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+	</head>
+	<body onload="draw()">
+		Speed: <button onclick="minus()">-</button> <span id='speed'><script> document.write(speed); </script></span> <button onclick="plus()">+</button><br />
+		<canvas id='display' width="255" height="255" style="margin-top: 5px;">
+			Your browser doesn't support canvas. To use this experiment, please upgrade.
+		</canvas>
+		<p style="font-size: 10px">Powered by HTML5 | <a href="http://sleepingcyb.org/">sleepingcyb.org</a></p>
+	</body>
+</html>

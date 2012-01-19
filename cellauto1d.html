@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Cellular Automata!</title>
+		<meta charset="utf-8" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+		<script>
+
+			window.requestAnimFrame = (function(){
+				return window.requestAnimationFrame ||
+					window.webkitRequestAnimationFrame ||
+					window.mozRequestAnimationFrame ||
+					window.oRequestAnimationFrame ||
+					window.msRequestAnimationFrame ||
+					function(callback, element) {
+						window.setTimeout(callback, 1000 / 60);
+					};
+			})();
+
+			var querystring = location.search.replace('?', '').split('&');
+			var queryObj = {};
+
+			for (var i = 0; i < querystring.length; i++) {
+				var name = querystring[i].split('=')[0];
+				var value = querystring[i].split('=')[1];
+				queryObj[name] = value;
+			}
+
+			var ctx;
+			var width;
+			var height;
+			
+			$(function(){
+				var canvas = $("#display")[0];
+				canvas.width = queryObj['width'];
+				canvas.width = canvas.width || 512;
+				canvas.height = queryObj['height'];
+				canvas.height = canvas.height || 256;
+				ctx = canvas.getContext('2d');
+				$("#go").click(draw).click();
+				$("#complement").click(function(){
+					$('#wnum').val(complement(parseInt($('#wnum').val())));
+					var s = $('#start').val();
+					if (s !== "random") {
+						if (s.substring(0,3) === 'rev') {
+							$("#start").val(s.substring(3));
+						} else {
+							$("#start").val('rev' + s);
+						}
+					}
+					drawRule();
+				});
+				$(document).keypress(function(e){
+					if (e.which === 13) {
+						e.preventDefault();
+						draw();
+					}
+				});
+				$("#wnum").keyup(drawRule);
+			});
+
+			function drawRule() {
+				var rule = parseInt($('#wnum').val()) % 256;
+				var rctx = $("#rule")[0].getContext('2d');
+				rctx.clearRect(0, 0, 124, 8);
+				for (var k = 0; k < 8; k++) {
+					for (var j = 0; j < 3; j++) {
+						if ((k >> j) & 1) {
+							rctx.fillStyle = "black";
+						} else {
+							rctx.fillStyle = "white";
+						}
+						rctx.fillRect(((7 - k) * 16 + (2 - j) * 4), 0, 4, 4);
+					}
+					if ((rule >> k) & 1) {
+						rctx.fillStyle = "black";
+					} else {
+						rctx.fillStyle = "white";
+					}
+					rctx.fillRect(((7 - k) * 16 + 4), 4, 4, 4);
+				}
+			}
+
+			function makeArray(width, fill) {
+				var a = new Array();
+				for (var x = 0; x < width; x++) {
+					a[x] = fill;
+				}
+				return a;
+			}
+
+			function makeRandomArray(width) {
+				var a = new Array();
+				for (var x = 0; x < width; x++) {
+					a[x] = Math.floor(Math.random() * 2) > 0;
+				}
+				return a;
+			}
+			
+			function draw() {
+				$(this).attr("disabled", true);
+				clearCanvas();
+
+				var rule = parseInt($('#wnum').val()) % 256;
+				$('#wnum').val(rule);
+				drawRule();
+				var anim = $('#animate').attr('checked');
+				width = $('#display').width();
+
+				var a;
+				var pattern = $('#start').val();
+				if (pattern.substring(0,3) === "rev") {
+					a = makeArray(width, true);
+				} else {
+					a = makeArray(width, false);
+				}
+
+				switch (pattern) {
+					case "random":
+					a = makeRandomArray(width);
+					break;
+					case "center":
+					case "revcenter":
+					a[Math.floor(width / 2)] = !a[Math.floor(width / 2)];
+					break;
+					case "left":
+					case "revleft":
+					a[0] = !a[0];
+					break;
+					case "right":
+					case "revright":
+					a[width - 1] = !a[width - 1];
+					break;
+				}
+
+				var y = 0;
+				height = $("#display").height();
+				function animloop() {
+					drawArray(y, a);
+					if (y < height) {
+						a = nextArray(a, rule);
+						y++;
+						if (y % 10 == 0 && anim) {
+							requestAnimFrame(animloop);
+						} else {
+							animloop();
+						}
+					} else {
+						$("#go").attr("disabled", false);
+					}
+				}
+
+				animloop();
+
+				return false;
+						
+			}
+
+			function drawArray(row, arr) {
+				$.each(arr, function(idx, item){
+					if (item) {
+						ctx.fillRect(idx,row,1,1);
+					}
+				});
+			}
+
+			function clearCanvas() {
+				ctx.clearRect(0, 0, width, height);
+			}
+
+			function getNum(arr, pos) {
+				var val = arr[(pos + width - 1) % width]; /* pos - 1 */
+				val = val << 1;
+				val += arr[(pos + width) % width]; /* pos */
+				val = val << 1;
+				val += arr[(pos + width + 1) % width]; /* pos + 1 */
+				return val;
+			}
+
+			function nextArray(arr, rule) {
+				var b = new Array();
+				$.each(arr, function(i){
+					var val = getNum(arr, i);
+					b[i] = (rule >> val) & 1;
+				});
+				return b;
+			}
+
+			function complement(code) {
+				var n = (~code & 0xff);
+				var o = 0;
+				for (var i = 0; i < 8; i++) {
+					o = (o << 1) | (n >> i) & 1;
+				}
+				return o;
+			}
+
+		</script>
+		<style>
+			body {
+				font: 12px/1.5 'Georgia', serif;
+			}
+		</style>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24174896-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+	</head>
+	<body>
+		Wolfram code (0 to 255): <input type='text' value='30' name='wnum' id='wnum' />
+		<button id='complement'>Complement</button><br />
+		Rule: <canvas id='rule' width="124" height="8" style="background-color: silver; border: 2px solid silver;"></canvas><br />
+		Starting pattern (the top row):
+		<select id='start'>
+			<option value='center'>1 black pixel, center</option>
+			<option value='random'>Random pixels</option>
+			<option value='left'>1 black pixel, left</option>
+			<option value='right'>1 black pixel, right</option>
+			<option value='revleft'>1 white pixel, left</option>
+			<option value='revcenter'>1 white pixel, center</option>
+			<option value='revright'>1 white pixel, right</option>
+		</select><br />
+		<input type='checkbox' id='animate' checked /> Animate rendering? (looks better on slower machines)<br />
+		<button id='go'>Go!</button><br />
+		<canvas id='display' width="1024" height="512" style="margin-top: 5px;">
+			Your browser doesn't support canvas. To use this experiment, please upgrade.
+		</canvas>
+		<p style="font-size: 10px">Powered by HTML5 | <a href="http://sleepingcyb.org/">sleepingcyb.org</a></p>
+	</body>
+</html>
